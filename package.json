@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": { 
+    "discord.js": "^14.9.0",
+    "dotenv": "^16.0.3",
+    "node_characterai": "^1.1.3"
+  }
+}
+  
