@@ -4,10 +4,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const characterAI = new CharacterAI();
-const characterId = process.env.CHARACTER_ID;
-await characterAI.authenticateWithToken(process.env.AI_KEY);
-const chat = await characterAI.createOrContinueChat(characterId);
+let chat = null;
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
@@ -22,23 +19,26 @@ let cooldownEndTime = 0;
 
 client.on("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`);
+  // Initalize CharacterAI on Ready
+  const characterAI = new CharacterAI();
+  const characterId = process.env.CHARACTER_ID;
+  await characterAI.authenticateWithToken(process.env.AI_KEY);
+  chat = await characterAI.createOrContinueChat(characterId);
 });
 
-client.on("messageCreate", async message => {
-  let mensaje = "";
-  if (message.content.startsWith("!ia") || message.content.startsWith("!IA")) {
-    if (message.content.startsWith("!ia")) {  
+client.on("messageCreate", async (message) => {
+  const split = message.content.split(" "); // Split on spaces
+  const command = split[0].toLowerCase(); // Extract command no case sensitive
+  const mensaje = split.slice(1).join(" "); // Slice command and rejoin the rest of the array
+  const { username } = message.author;
+  switch (command) {
+    // Comando ia
+    case "!ia":
       await message.channel.sendTyping();
-      mensaje = message.content.split("!ia ")[1];
-    } else if (message.content.startsWith("!IA")) {
-      await message.channel.sendTyping();
-      mensaje = message.content.split("!IA ")[1];
-    }
       console.log(mensaje);
-      const { username } = message.author;
       try {
         const data = await fetch(`https://dev.ahmedrangel.com/dc/ai/${encodeURIComponent(username)}/${encodeURIComponent(mensaje.replaceAll(/"/g,"").replaceAll(/\n/g," "))}`);
-        let respuesta = await data.text()
+        let respuesta = await data.text();
         if (respuesta.length > 1998) {
           respuesta = respuesta.slice(0, 1998);
           console.log("Respuesta supera los 1999 caracteres");
@@ -49,67 +49,68 @@ client.on("messageCreate", async message => {
       catch (error) {
         console.log(error);
       }
-
-  } else if (message.content.startsWith("!generar")) {
-    function esUrl(cadena) {
-      const regex = /^(ftp|http|https):\/\/[^ "]+$/;
-      return regex.test(cadena);
-    }
-    if (cooldownActive) {
-      let now = new Date().getTime();
-      let timeRemaining = cooldownEndTime - now;
-      timeRemaining = timeRemaining * 0.001;
-      message.reply("El comando está en cooldown. Vuelve a intentarlo en: " + Math.round(timeRemaining) + " segundos.");
-      return;
-    }
-    await message.channel.sendTyping();
-    mensaje = message.content.split("!generar ")[1];
-    try {
-      const data = await fetch(`https://dev.ahmedrangel.com/dc/image-generation/${encodeURIComponent(mensaje)}`);
-      let respuesta = await data.text()
-      if (esUrl(respuesta)) {
-        console.log(respuesta+"\n\n");
-        message.reply({embeds: [{
-          color: 0xfb05ef,
-          description: mensaje,
-          image: {
-            url: respuesta
-          }     
-        }]});
-        cooldownActive = true;
-        cooldownEndTime = new Date().getTime() + cooldownDuration;
-        setTimeout(() => {
-          cooldownActive = false;
-        }, cooldownDuration);
-      } else {
-        console.log(respuesta+"\n\n");
-        mensaje = ":x: Error. Se ha detectado posible contenido inapropiado en el texto de la solicitud."
-        message.reply({embeds: [{
-          color: 0xfb05ef,
-          description: mensaje,    
-        }]});
+      break;
+    // Comando generar
+    case "!generar":
+      const esUrl = (cadena) => {
+        const regex = /^(ftp|http|https):\/\/[^ "]+$/;
+        return regex.test(cadena);
       }
-    }
-    catch (error) {
-      console.log(error);
-      message.reply(error)
-    }
-  }
-  else if (message.content.startsWith("!zihnee")) {
-    await message.channel.sendTyping();
-    const mensaje = message.content.split("!zihnee ")[1];
-    console.log(mensaje);
-    const { username } = message.author;
-    try {
-      const respuesta = await chat.sendAndAwaitResponse(`${username} says:\n${mensaje}`, true);
-      console.log(respuesta.text);
-      await message.reply(respuesta.text.replaceAll(/xdx/g,"<:xdx:1074494997996511242>").replaceAll(/uwu/g,"<:uwu:1074499520462860369>").replaceAll(/<3/g,"<:zihnecora:1100920647699419197>"));
-    }
-    catch (error) {
-      console.log(error);
-    }
+
+      if (cooldownActive) {
+        let now = new Date().getTime();
+        let timeRemaining = cooldownEndTime - now;
+        timeRemaining = timeRemaining * 0.001;
+        message.reply("El comando está en cooldown. Vuelve a intentarlo en: " + Math.round(timeRemaining) + " segundos.");
+        return;
+      }
+      await message.channel.sendTyping();
+      try {
+        const data = await fetch(`https://dev.ahmedrangel.com/dc/image-generation/${encodeURIComponent(mensaje)}`);
+        let respuesta = await data.text()
+        if (esUrl(respuesta)) {
+          console.log(respuesta+"\n\n");
+          message.reply({
+            embeds: [{
+              color: 0xfb05ef,
+              description: mensaje,
+              image: {
+                url: respuesta
+              }     
+            }]
+          });
+          cooldownActive = true;
+          cooldownEndTime = new Date().getTime() + cooldownDuration;
+          setTimeout(() => {
+            cooldownActive = false;
+          }, cooldownDuration);
+        } else {
+          console.log(respuesta+"\n\n");
+          message.reply({embeds: [{
+            color: 0xfb05ef,
+            description: ":x: Error. Se ha detectado posible contenido inapropiado en el texto de la solicitud.",    
+          }]});
+        }
+      }
+      catch (error) {
+        console.log(error);
+        message.reply(error)
+      }
+      break;
+    // Comando zihnee
+    case "!zihnee":
+      await message.channel.sendTyping();
+      console.log(mensaje);
+      try {
+        const respuesta = await chat.sendAndAwaitResponse(`${username} says:\n${mensaje}`, true);
+        console.log(respuesta.text);
+        await message.reply(respuesta.text.replaceAll(/xdx/g,"<:xdx:1074494997996511242>").replaceAll(/uwu/g,"<:uwu:1074499520462860369>").replaceAll(/<3/g,"<:zihnecora:1100920647699419197>"));
+      }
+      catch (error) {
+        console.log(error);
+      }
+      break;
   }
 });
-
 
 client.login(process.env.DISCORD_TOKEN);
