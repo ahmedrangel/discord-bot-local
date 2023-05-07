@@ -84,6 +84,12 @@ client.on("messageCreate", async (message) => {
           setTimeout(() => {
             cooldownActive = false;
           }, cooldownDuration);
+        } else if (respuesta == "Billing hard limit has been reached") {
+          console.log(respuesta+"\n\n");
+          message.reply({embeds: [{
+            color: 0xfb05ef,
+            description: "⚠️ Error. Créditos expirados. <@341828695612456960> lo resolverá pronto.",    
+          }]});
         } else {
           console.log(respuesta+"\n\n");
           message.reply({embeds: [{
