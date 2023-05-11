@@ -110,7 +110,17 @@ client.on("messageCreate", async (message) => {
       try {
         const respuesta = await chat.sendAndAwaitResponse(`${username} says:\n${mensaje}`, true);
         console.log(respuesta.text);
-        await message.reply(respuesta.text.replaceAll(/xdx/g,"<:xdx:1074494997996511242>").replaceAll(/uwu/g,"<:uwu:1074499520462860369>").replaceAll(/<3/g,"<:zihnecora:1100920647699419197>"));
+        const emote_cora = "<:zihnecora:1100920647699419197> ";
+        const emote_monku = "<:monkU:1059672495604650084>";
+        const emote_uwu = "<:uwu:1074499520462860369>";
+        const emote_xdx = "<:xdx:1074494997996511242> ";
+        const emote_flower = "<:peepoflower:1059683310080626688>";
+        
+        const regex_uwu = new RegExp("uwu", "gi");
+        const regex_xdx = new RegExp("xdx", "gi");
+        const regex_o = new RegExp(":o", "gi");
+
+        await message.reply(respuesta.text.replaceAll(regex_xdx, emote_xdx).replaceAll(/xD/g, emote_xdx).replaceAll(regex_uwu, emote_uwu).replaceAll(/<3/g, emote_cora).replaceAll(regex_o, emote_monku).replaceAll(/:3/g, emote_flower));
       }
       catch (error) {
         console.log(error);
