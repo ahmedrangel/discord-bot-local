@@ -35,10 +35,10 @@ client.on("messageCreate", async (message) => {
     // Comando zihnee
     case "!zihnee":
       await message.channel.sendTyping();
-      console.log(mensaje);
+      console.log(username + ": " + mensaje);
       try {
         const respuesta = await chat.sendAndAwaitResponse(`${username} says:\n${mensaje}`, true);
-        console.log(respuesta.text);
+        console.log("Gemi-chan: " + respuesta.text);
         const emote_cora = "<:zihnecora:1100920647699419197> ";
         const emote_monku = "<:monkU:1059672495604650084>";
         const emote_uwu = "<:uwu:1074499520462860369>";
