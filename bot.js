@@ -5,8 +5,11 @@ import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
 import Keyv from "keyv";
 import { Events } from "discord.js";
+import { playSongs } from "./utils/audioPlayer/playSongs.js";
+
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 let connection = null;
+let dinMsg = null;
 
 dotenv.config();
 
@@ -64,6 +67,7 @@ client.on(Events.MessageCreate, async (message) => {
       }
       break;*/
   case "!gplay":
+    dinMsg = message;
     C.gPlay(player, connection, message, mensaje);
     break;
   }
@@ -72,6 +76,7 @@ client.on(Events.MessageCreate, async (message) => {
 player.on(AudioPlayerStatus.Idle, async () => {
   console.log("audio player idle");
   await keyv.set("isPlaying", false);
+  await playSongs(player, connection, dinMsg);
 });
 
 client.login(process.env.DISCORD_TOKEN);
