@@ -40,6 +40,11 @@ export const playSongs = async (player, message, connection) => {
         inline: true
       }
     );
+    playerButtons.forEach ((b) => {
+      if (!musicQueue.length && b.custom_id === "btn_cleanList") {
+        b.disabled = true;
+      }
+    });
     components.push({
       type: ComponentType.ActionRow,
       components: playerButtons
