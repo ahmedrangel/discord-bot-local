@@ -1,39 +1,47 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import CharacterAI from "node_characterai";
 import * as dotenv from "dotenv";
+import { createAudioPlayer, AudioPlayerStatus } from "@discordjs/voice";
+import * as C from "./commands/index.js";
+import _dirname from "./projectPath.js";
+import Keyv from "keyv";
+import { Events } from "discord.js";
+const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
+let connection = null;
 
 dotenv.config();
-
-let chat = null;
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.MessageContent,
   GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.GuildIntegrations
+  GatewayIntentBits.GuildMembers,
+  GatewayIntentBits.GuildIntegrations,
+  GatewayIntentBits.GuildVoiceStates,
+  GatewayIntentBits.GuildMessageReactions,
+  GatewayIntentBits.GuildEmojisAndStickers,
+  GatewayIntentBits.GuildPresences
 ] });
 
-let cooldownActive = false;
-let cooldownDuration = 60000;
-let cooldownEndTime = 0;
+const player = createAudioPlayer();
+await keyv.set("isPlaying", false);
 
-client.on("ready", async () => {
+client.on(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}!`);
   // Initalize CharacterAI on Ready
-  const characterAI = new CharacterAI();
+  /*const characterAI = new CharacterAI();
   const characterId = process.env.CHARACTER_ID;
   await characterAI.authenticateWithToken(process.env.AI_KEY);
-  chat = await characterAI.createOrContinueChat(characterId);
+  chat = await characterAI.createOrContinueChat(characterId);*/
 });
 
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
   const split = message.content.split(" "); // Split on spaces
   const command = split[0].toLowerCase(); // Extract command no case sensitive
   const mensaje = split.slice(1).join(" "); // Slice command and rejoin the rest of the array
-  const { username } = message.author;
+  const { user } = message.author;
   switch (command) {
-    // Comando zihnee
-    case "!zihnee":
+  // Comando zihnee
+  /*case "!zihnee":
       await message.channel.sendTyping();
       console.log(username + ": " + mensaje);
       try {
@@ -54,8 +62,17 @@ client.on("messageCreate", async (message) => {
       catch (error) {
         console.log(error);
       }
-      break;
+      break;*/
+  case "!gplay":
+    C.gPlay(player, connection, message, mensaje);
+    break;
   }
+});
+
+player.on(AudioPlayerStatus.Idle, async () => {
+  console.log("audio player idle");
+  connection.destroy();
+  await keyv.set("isPlaying", false);
 });
 
 client.login(process.env.DISCORD_TOKEN);
