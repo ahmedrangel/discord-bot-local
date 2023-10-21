@@ -1,7 +1,7 @@
 import { joinVoiceChannel } from "@discordjs/voice";
 import ytdl from "ytdl-core";
 import * as yt from "youtube-search-without-api-key";
-import { formatDuration } from "../functions.js";
+import { formatDuration } from "../utils/functions.js";
 import { playSongs } from "../utils/audioPlayer/playSongs.js";
 import CONSTANTS from "../constants.js";
 import _dirname from "../projectPath.js";
