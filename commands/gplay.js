@@ -70,8 +70,9 @@ export const gPlay = async (player, connection, message, mensaje) => {
       embeds: embeds,
     });
     const isPlaying = await keyv.get("isPlaying");
-    !isPlaying ? await playSongs(player, connection, message) : null;
+    !isPlaying ? await playSongs(player, message, connection) : null;
   } else {
     message.reply("¡Debes estar en un canal de voz para poder unirme!");
   }
+  return connection;
 };

@@ -68,7 +68,7 @@ client.on(Events.MessageCreate, async (message) => {
       break;*/
   case "!gplay":
     dinMsg = message;
-    C.gPlay(player, connection, message, mensaje);
+    connection = await C.gPlay(player, connection, message, mensaje);
     break;
   }
 });
@@ -76,7 +76,7 @@ client.on(Events.MessageCreate, async (message) => {
 player.on(AudioPlayerStatus.Idle, async () => {
   console.log("audio player idle");
   await keyv.set("isPlaying", false);
-  await playSongs(player, connection, dinMsg);
+  await playSongs(player, dinMsg, connection);
 });
 
 client.login(process.env.DISCORD_TOKEN);

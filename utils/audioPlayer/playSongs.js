@@ -10,7 +10,7 @@ import Keyv from "keyv";
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
 
-export const playSongs = async (player, connection, message) => {
+export const playSongs = async (player, message, connection) => {
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
   const nextSong = musicQueue.shift();
   await keyv.set("musicQueue", JSON.stringify(musicQueue));
@@ -116,7 +116,7 @@ export const playSongs = async (player, connection, message) => {
             description: `⏭️ **${i.user.globalName}** ha skipeado \`${nextSong.title}\`.`
           }],
         });
-        await playSongs(player, connection, message);
+        await playSongs(player, message, connection);
         break;
       case "btn_playlist":
         await i.deferUpdate();
