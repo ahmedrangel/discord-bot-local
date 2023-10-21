@@ -71,7 +71,6 @@ client.on(Events.MessageCreate, async (message) => {
 
 player.on(AudioPlayerStatus.Idle, async () => {
   console.log("audio player idle");
-  connection.destroy();
   await keyv.set("isPlaying", false);
 });
 
