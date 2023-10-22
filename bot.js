@@ -66,7 +66,8 @@ player.on(AudioPlayerStatus.Idle, async () => {
   if (musicQueue.length) {
     await playSongs(player, dinMsg, connection);
   } else {
-    connection.destroy();
+    connection.disconnect();
+    await playSongs(player, dinMsg, null);
     connection = null;
   }
 });
