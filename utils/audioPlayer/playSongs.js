@@ -6,6 +6,7 @@ import playerButtons from "./playerButtons.js";
 import CONSTANTS from "../../constants.js";
 import _dirname from "../../projectPath.js";
 import Keyv from "keyv";
+import { totalDuration } from "../functions.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -137,11 +138,15 @@ export const playSongs = async (player, message, connection, isIdle) => {
         await i.deferUpdate();
         const queue = JSON.parse(await keyv.get("musicQueue"));
         const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
-        const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n");
+        const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
+        const duration = [];
+        queue.forEach((s, i) => {
+          i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);;
+        });
         const playlistEmbed = {
           color: color,
           title: "📄 Lista de reproducción:",
-          description: nowPlaying + nextSongs,
+          description: nowPlaying + nextSongs + `**Duración total: \`${totalDuration(duration)}\`**`,
         };
         message.channel.send({
           content: "",
