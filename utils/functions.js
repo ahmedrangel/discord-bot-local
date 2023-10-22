@@ -6,7 +6,6 @@ export const formatDuration = (durationSeconds) => {
 };
 
 export const totalDuration = (array) => {
-  // Sumar los tiempos en formato "mm:ss"
   let tiempoTotal = 0;
   console.log(array);
   for (const item of array) {
@@ -15,7 +14,6 @@ export const totalDuration = (array) => {
       tiempoTotal += parseInt(tiempoParts[0]) * 60 + parseInt(tiempoParts[1]);
     }
   }
-  // Formatear segundos
   const horas = Math.floor(tiempoTotal / 3600);
   const horasTotales = tiempoTotal % 3600;
   const minutos = Math.floor(horasTotales / 60);
