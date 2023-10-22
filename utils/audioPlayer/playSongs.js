@@ -12,14 +12,14 @@ const { color } = CONSTANTS;
 let response, connected;
 let globalEmbeds, globalComponents;
 
-export const playSongs = async (player, message, connection) => {
+export const playSongs = async (player, message, connection, isIdle) => {
   const embeds = [], fields = [], components = [];
   const musicQueue = JSON.parse(await keyv.get("musicQueue")); // get Queue
   const nextSong = musicQueue[0]; // get Current Song
   const isPlaying = await keyv.get("isPlaying");
-  // if not connection disable all buttons
-  if (!connection) {
-    connected = false;
+  connected = !connection ? false : true;
+  // if idle disable all buttons
+  if (isIdle) {
     await keyv.set("isPlaying", false);
     playerButtons.forEach ((b) => {
       b.disabled = true;
@@ -28,8 +28,6 @@ export const playSongs = async (player, message, connection) => {
     response.edit({
       components: globalComponents,
     });
-  } else {
-    connected = true;
   };
   // if not playing and connected enable buttons and start music
   if (!isPlaying && connected) {

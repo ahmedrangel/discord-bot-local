@@ -64,10 +64,10 @@ player.on(AudioPlayerStatus.Idle, async () => {
   await keyv.set("isPlaying", false);
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
   if (musicQueue.length) {
-    await playSongs(player, dinMsg, connection);
+    await playSongs(player, dinMsg, connection, true);
   } else {
     connection.disconnect();
-    await playSongs(player, dinMsg, null);
+    await playSongs(player, dinMsg, null, true);
     connection = null;
   }
 });
