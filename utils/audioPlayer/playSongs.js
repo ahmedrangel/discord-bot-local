@@ -9,27 +9,28 @@ import Keyv from "keyv";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
+let response;
+let globalEmbeds;
+let globalComponents;
 
 export const playSongs = async (player, message, connection) => {
+  const embeds = [], fields = [];
+  const isPlaying = await keyv.get("isPlaying");
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
-  const nextSong = musicQueue.shift();
-  await keyv.set("musicQueue", JSON.stringify(musicQueue));
-  const embeds = [], fields = [], components = [];
+  const nextSong = musicQueue[0];
+  const components = [];
   playerButtons.forEach ((b) => {
     b.disabled = false;
   });
-  if (nextSong) {
+  if (!isPlaying) {
+    musicQueue.shift();
+    await keyv.set("musicQueue", JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);
     connection.subscribe(player);
     await keyv.set("isPlaying", true);
-    player.on(VoiceConnectionStatus.Idle, async() => {
-      console.log("idle");
-      connection.destroy();
-      await keyv.set("isPlaying", false);
-    });
     fields.push(
       { name: "Duración",
         value: `\`${nextSong.duration}\``,
@@ -41,9 +42,7 @@ export const playSongs = async (player, message, connection) => {
       }
     );
     playerButtons.forEach ((b) => {
-      if (!musicQueue.length && b.custom_id === "btn_cleanList") {
-        b.disabled = true;
-      }
+      !musicQueue.length && b.custom_id === "btn_cleanList" ? b.disabled = true : null;
     });
     components.push({
       type: ComponentType.ActionRow,
@@ -62,7 +61,7 @@ export const playSongs = async (player, message, connection) => {
       },
       fields: fields
     });
-    const response = await message.channel.send({
+    response = await message.channel.send({
       content: "",
       embeds: embeds,
       components: components,
@@ -80,10 +79,10 @@ export const playSongs = async (player, message, connection) => {
           b.disabled = true;
         });
         response.edit({
-          content: "",
-          embeds: embeds,
           components: components,
         });
+        connection = null;
+        await keyv.set("isPlaying", false);
         break;
       case "btn_togglePause":
         await i.deferUpdate();
@@ -99,7 +98,6 @@ export const playSongs = async (player, message, connection) => {
         });
         embeds[0].title = isPaused ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
         response.edit({
-          content: "",
           embeds: embeds,
           components: components,
         });
@@ -111,7 +109,6 @@ export const playSongs = async (player, message, connection) => {
           b.disabled = true;
         });
         response.edit({
-          content: "",
           embeds: embeds,
           components: components,
         });
@@ -129,7 +126,7 @@ export const playSongs = async (player, message, connection) => {
         const playlistEmbed = {
           color: color,
           title: "📄 Lista de reproducción:",
-          description: `1. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n` + queue.map((song, index) => `${index + 2}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n"),
+          description: `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n` + queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n"),
         };
         message.channel.send({
           content: "",
@@ -139,22 +136,28 @@ export const playSongs = async (player, message, connection) => {
       case "btn_cleanList":
         await i.deferUpdate();
         await keyv.set("musicQueue", JSON.stringify([]));
-        playerButtons.forEach ((b) => {
-          if (b.custom_id === "btn_cleanList") {
-            b.disabled = true;
-          }
-        });
-        response.edit({
-          content: "",
-          embeds: embeds,
-          components: components,
-        });
-        console.log(i);
         message.channel.send({
           content: "",
           embeds: [{
             description: `🧹 **${i.user.globalName}** ha limpiado la lista.`
           }],
+        });
+        playerButtons.forEach ((b) => {
+          b.custom_id === "btn_cleanList" ? b.disabled = true : null;
+        });
+        embeds[0].fields = [
+          { name: "Duración",
+            value: `\`${nextSong.duration}\``,
+            inline: true
+          },
+          { name: "En cola:",
+            value: "`0 canciones`",
+            inline: true
+          }
+        ];
+        response.edit({
+          embeds: embeds,
+          components: components,
         });
         break;
       default:
@@ -167,10 +170,30 @@ export const playSongs = async (player, message, connection) => {
         b.disabled = true;
       });
       response.edit({
-        content: "",
-        embeds: embeds,
         components: components,
       });
+    });
+    globalEmbeds = embeds;
+    globalComponents = components;
+  } else if (isPlaying && nextSong) {
+    const updatedQueue = JSON.parse(await keyv.get("musicQueue"));
+    globalEmbeds[0].fields = [
+      { name: "Duración",
+        value: `\`${nextSong.duration}\``,
+        inline: true
+      },
+      { name: "En cola:",
+        value: `\`${updatedQueue.length} canci${updatedQueue.length === 1 ? "ón" : "ones"}\``,
+        inline: true
+      }
+    ];
+    playerButtons.forEach ((b) => {
+      b.custom_id === "btn_cleanList" ? b.disabled = false : null;
+    });
+    globalComponents[0].components = playerButtons;
+    response.edit({
+      embeds: globalEmbeds,
+      components: globalComponents,
     });
   } else {
     await keyv.set("isPlaying", false);

@@ -42,16 +42,6 @@ export const gPlay = async (player, connection, message, mensaje) => {
     });
     await keyv.set("musicQueue", JSON.stringify(musicQueue));
     const embeds = [], fields = [];
-    fields.push(
-      { name: "Duración",
-        value: `\`${duration}\``,
-        inline: true
-      },
-      { name: "En cola:",
-        value: `\`${musicQueue.length} canci${musicQueue.length === 1 ? "ón" : "ones"}\``,
-        inline: true
-      }
-    );
     embeds.push({
       color: color,
       title: "✅ Se ha añadido a la cola:",
@@ -62,15 +52,13 @@ export const gPlay = async (player, connection, message, mensaje) => {
       },
       thumbnail: {
         url: thumbnail,
-      },
-      fields: fields
+      }
     });
     message.channel.send({
       content: "",
       embeds: embeds,
     });
-    const isPlaying = await keyv.get("isPlaying");
-    !isPlaying ? await playSongs(player, message, connection) : null;
+    await playSongs(player, message, connection);
   } else {
     message.reply("¡Debes estar en un canal de voz para poder unirme!");
   }
