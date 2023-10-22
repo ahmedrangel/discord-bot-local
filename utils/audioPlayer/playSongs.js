@@ -10,8 +10,8 @@ import Keyv from "keyv";
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
 let response;
-let globalEmbeds;
-let globalComponents;
+let globalEmbeds, globalComponents;
+let skipped = false;
 
 export const playSongs = async (player, message, connection) => {
   const embeds = [], fields = [];
@@ -19,10 +19,10 @@ export const playSongs = async (player, message, connection) => {
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
   const nextSong = musicQueue[0];
   const components = [];
-  playerButtons.forEach ((b) => {
-    b.disabled = false;
-  });
   if (!isPlaying) {
+    playerButtons.forEach ((b) => {
+      b.disabled = false;
+    });
     musicQueue.shift();
     await keyv.set("musicQueue", JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 });
@@ -71,6 +71,7 @@ export const playSongs = async (player, message, connection) => {
 
     collector.on("collect", async (i) => {
       console.log(i.customId);
+      i.customId === "btn_skip" ? skipped = true : skipped = false;
       switch (i.customId) {
       case "btn_dc":
         await i.deferUpdate();
@@ -175,7 +176,7 @@ export const playSongs = async (player, message, connection) => {
     });
     globalEmbeds = embeds;
     globalComponents = components;
-  } else if (isPlaying && nextSong) {
+  } else if (isPlaying && nextSong && !skipped) {
     const updatedQueue = JSON.parse(await keyv.get("musicQueue"));
     globalEmbeds[0].fields = [
       { name: "Duración",
