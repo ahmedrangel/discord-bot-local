@@ -76,7 +76,13 @@ client.on(Events.MessageCreate, async (message) => {
 player.on(AudioPlayerStatus.Idle, async () => {
   console.log("audio player idle");
   await keyv.set("isPlaying", false);
-  await playSongs(player, dinMsg, connection);
+  const musicQueue = JSON.parse(await keyv.get("musicQueue"));
+  if (musicQueue.length) {
+    await playSongs(player, dinMsg, connection);
+  } else {
+    connection.destroy();
+    connection = null;
+  }
 });
 
 client.login(process.env.DISCORD_TOKEN);
