@@ -80,7 +80,7 @@ export const playSongs = async (player, message, connection) => {
     });
 
     // create collector
-    const collector = response.createMessageComponentCollector({ time: 300000 });
+    const collector = response.createMessageComponentCollector();
     // collector events
     collector.on("collect", async (i) => {
       console.log(i.customId);
