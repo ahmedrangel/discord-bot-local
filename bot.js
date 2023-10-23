@@ -1,6 +1,5 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
-import { createAudioPlayer, AudioPlayerStatus } from "@discordjs/voice";
 import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
 import Keyv from "keyv";
@@ -9,12 +8,14 @@ import { playSongs } from "./utils/audioPlayer/playSongs.js";
 import CharacterAI from "node_characterai";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
-let connection = null;
 let dinMsg = null;
 let chat = null;
 
 dotenv.config();
-
+await keyv.delete("musicQueue-1048659746137317498");
+await keyv.delete("player-1048659746137317498");
+await keyv.delete("musicQueue-1165980362254602242");
+await keyv.delete("player-1165980362254602242");
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.MessageContent,
@@ -27,7 +28,6 @@ const client = new Client({ intents: [
   GatewayIntentBits.GuildPresences
 ] });
 
-const player = createAudioPlayer();
 await keyv.set("isPlaying", false);
 
 client.on(Events.ClientReady, async () => {
@@ -54,21 +54,8 @@ client.on(Events.MessageCreate, async (message) => {
   */
   case "!gplay":
     dinMsg = message;
-    connection = await C.gPlay(player, connection, message, text);
+    C.gPlay(message, text);
     break;
-  }
-});
-
-player.on(AudioPlayerStatus.Idle, async () => {
-  console.log("audio player idle");
-  await keyv.set("isPlaying", false);
-  const musicQueue = JSON.parse(await keyv.get("musicQueue"));
-  if (musicQueue.length) {
-    await playSongs(player, dinMsg, connection, true);
-  } else {
-    connection.disconnect();
-    await playSongs(player, dinMsg, null, true);
-    connection = null;
   }
 });
 

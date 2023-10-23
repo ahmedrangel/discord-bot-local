@@ -10,37 +10,37 @@ import { totalDuration } from "../functions.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
-let response, connected;
-let globalEmbeds, globalComponents;
+let response = {}, connected = {};
+let globalEmbeds = {}, globalComponents = {};
 
 export const playSongs = async (player, message, connection, isIdle) => {
   const embeds = [], fields = [], components = [];
-  const musicQueue = JSON.parse(await keyv.get("musicQueue")); // get Queue
+  const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.channelId}`)); // get Queue
   const nextSong = musicQueue[0]; // get Current Song
-  const isPlaying = await keyv.get("isPlaying");
-  connected = !connection ? false : true;
+  const isPlaying = await keyv.get(`player-${message.channelId}`);
+  connected[message.channelId] = !connection ? false : true;
   // if idle disable all buttons
   if (isIdle) {
-    await keyv.set("isPlaying", false);
+    await keyv.set(`player-${message.channelId}`, false);
     playerButtons.forEach ((b) => {
       b.disabled = true;
     });
-    globalComponents[0].components = playerButtons;
-    response.edit({
-      components: globalComponents,
+    globalComponents[message.channelId][0].components = playerButtons;
+    response[message.channelId].edit({
+      components: globalComponents[message.channelId],
     });
   };
-  // if not playing and connected enable buttons and start music
-  if (!isPlaying && connected) {
+  // if not playing and connected[message.channelId] enable buttons and start music
+  if (!isPlaying && connected[message.channelId]) {
     playerButtons.forEach ((b) => { b.disabled = false; }); // enable all buttons
     musicQueue.shift();
-    await keyv.set("musicQueue", JSON.stringify(musicQueue));
+    await keyv.set(`musicQueue-${message.channelId}`, JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);
     connection.subscribe(player);
-    await keyv.set("isPlaying", true);
+    await keyv.set(`player-${message.channelId}`, true);
     fields.push(
       { name: "Duración",
         value: `\`${nextSong.duration}\``,
@@ -72,14 +72,14 @@ export const playSongs = async (player, message, connection, isIdle) => {
       },
       fields: fields
     });
-    response = await message.channel.send({
+    response[message.channelId] = await message.channel.send({
       content: "",
       embeds: embeds,
       components: components,
     });
 
     // create collector
-    const collector = response.createMessageComponentCollector();
+    const collector = response[message.channelId].createMessageComponentCollector();
     // collector events
     collector.on("collect", async (i) => {
       console.log(i.customId);
@@ -91,10 +91,10 @@ export const playSongs = async (player, message, connection, isIdle) => {
         playerButtons.forEach ((b) => {
           b.disabled = true;
         });
-        response.edit({
+        response[message.channelId].edit({
           components: components,
         });
-        await keyv.set("isPlaying", false);
+        await keyv.set(`player-${message.channelId}`, false);
         break;
       // if pause/unpause button is pressed
       case "btn_togglePause":
@@ -110,7 +110,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
           }
         });
         embeds[0].title = isPaused ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
-        response.edit({
+        response[message.channelId].edit({
           embeds: embeds,
           components: components,
         });
@@ -122,7 +122,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
         playerButtons.forEach ((b) => {
           b.disabled = true;
         });
-        response.edit({
+        response[message.channelId].edit({
           embeds: embeds,
           components: components,
         });
@@ -136,13 +136,18 @@ export const playSongs = async (player, message, connection, isIdle) => {
       // if playlist button is pressed
       case "btn_playlist":
         await i.deferUpdate();
-        const queue = JSON.parse(await keyv.get("musicQueue"));
+        const queue = JSON.parse(await keyv.get(`musicQueue-${message.channelId}`));
         const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
         const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
         const duration = [];
-        queue.forEach((s, i) => {
-          i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);;
-        });
+        console.log(queue[0]);
+        if (queue[0]) {
+          queue.forEach((s, i) => {
+            i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);
+          });
+        } else {
+          duration.push(nextSong?.duration);
+        }
         const playlistEmbed = {
           color: color,
           title: "📄 Lista de reproducción:",
@@ -156,7 +161,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
       // if cleanList button is pressed
       case "btn_cleanList":
         await i.deferUpdate();
-        await keyv.set("musicQueue", JSON.stringify([]));
+        await keyv.set(`musicQueue-${message.channelId}`, JSON.stringify([]));
         message.channel.send({
           content: "",
           embeds: [{
@@ -176,7 +181,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
             inline: true
           }
         ];
-        response.edit({
+        response[message.channelId].edit({
           embeds: embeds,
           components: components,
         });
@@ -190,16 +195,16 @@ export const playSongs = async (player, message, connection, isIdle) => {
       playerButtons.forEach ((b) => {
         b.disabled = true;
       });
-      response.edit({
+      response[message.channelId].edit({
         components: components,
       });
     });
-    globalEmbeds = embeds;
-    globalComponents = components;
+    globalEmbeds[message.channelId] = embeds;
+    globalComponents[message.channelId] = components;
   } else if (isPlaying && nextSong) {
     // if playing and there is a next song, enable cleanList button and edit message
-    const updatedQueue = JSON.parse(await keyv.get("musicQueue"));
-    globalEmbeds[0].fields = [
+    const updatedQueue = JSON.parse(await keyv.get(`musicQueue-${message.channelId}`));
+    globalEmbeds[message.channelId][0].fields = [
       { name: "Duración",
         value: `\`${nextSong.duration}\``,
         inline: true
@@ -212,12 +217,12 @@ export const playSongs = async (player, message, connection, isIdle) => {
     playerButtons.forEach ((b) => {
       b.custom_id === "btn_cleanList" ? b.disabled = false : null;
     });
-    globalComponents[0].components = playerButtons;
-    response.edit({
-      embeds: globalEmbeds,
-      components: globalComponents,
+    globalComponents[message.channelId][0].components = playerButtons;
+    response[message.channelId].edit({
+      embeds: globalEmbeds[message.channelId],
+      components: globalComponents[message.channelId],
     });
   } else {
-    await keyv.set("isPlaying", false);
+    await keyv.set(`player-${message.channelId}`, false);
   }
 };
