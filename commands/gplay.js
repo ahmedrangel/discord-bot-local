@@ -17,9 +17,9 @@ export const gPlay = async (player, connection, message, text) => {
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
   const isPlaying = await keyv.get("isPlaying");
   const joinVoice = joinVoiceChannel({
-    channelId: voiceChannel.id,
-    guildId: voiceChannel.guild.id,
-    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+    channelId: voiceChannel?.id,
+    guildId: voiceChannel?.guild?.id,
+    adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
   });
   if (voiceChannel && text) {
     connection = joinVoice;
