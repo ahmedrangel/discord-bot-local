@@ -2,20 +2,13 @@ import { Client, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
 import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
-import Keyv from "keyv";
 import { Events } from "discord.js";
-import { playSongs } from "./utils/audioPlayer/playSongs.js";
 import CharacterAI from "node_characterai";
 
-const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
-let dinMsg = null;
 let chat = null;
 
 dotenv.config();
-await keyv.delete("musicQueue-1048659746137317498");
-await keyv.delete("player-1048659746137317498");
-await keyv.delete("musicQueue-1165980362254602242");
-await keyv.delete("player-1165980362254602242");
+
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.MessageContent,
@@ -27,8 +20,6 @@ const client = new Client({ intents: [
   GatewayIntentBits.GuildEmojisAndStickers,
   GatewayIntentBits.GuildPresences
 ] });
-
-await keyv.set("isPlaying", false);
 
 client.on(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -53,7 +44,6 @@ client.on(Events.MessageCreate, async (message) => {
     break;
   */
   case "!gplay":
-    dinMsg = message;
     C.gPlay(message, text);
     break;
   }
