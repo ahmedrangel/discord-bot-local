@@ -2,12 +2,21 @@ import { Client, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
 import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
+import Keyv from "keyv";
 import { Events } from "discord.js";
 import CharacterAI from "node_characterai";
 
+const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 let chat = null;
 
 dotenv.config();
+
+// Clear audio players if the application restarts due to an error or forced termination.
+for await (const [key, value] of keyv.iterator()) {
+  if (key.includes("player-")) {
+    await keyv.delete(key);
+  }
+};
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
