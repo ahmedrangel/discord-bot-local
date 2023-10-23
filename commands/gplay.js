@@ -16,12 +16,12 @@ export const gPlay = async (player, connection, message, text) => {
   const username = message.author.globalName;
   const musicQueue = JSON.parse(await keyv.get("musicQueue"));
   const isPlaying = await keyv.get("isPlaying");
-  const joinVoice = joinVoiceChannel({
-    channelId: voiceChannel?.id,
-    guildId: voiceChannel?.guild?.id,
-    adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
-  });
   if (voiceChannel && text) {
+    const joinVoice = joinVoiceChannel({
+      channelId: voiceChannel?.id,
+      guildId: voiceChannel?.guild?.id,
+      adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
+    });
     connection = joinVoice;
     const simbolos = "<,>,\`";
     const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
@@ -62,12 +62,11 @@ export const gPlay = async (player, connection, message, text) => {
     });
     await playSongs(player, message, connection);
   } else if (voiceChannel && !text && musicQueue[0] && !isPlaying) {
-    connection = joinVoice;
     await playSongs(player, message, connection);
   } else if (!musicQueue[0] && !isPlaying) {
     message.reply("No hay canciones en cola, para agregar una utiliza **`!gplay <cancion>`**");
   } else if (!voiceChannel) {
-    message.reply("¡Debes estar en un canal de voz para poder unirme!");
+    message.reply("¡Debes estar en un canal de voz para pedir una canción!");
   }
   return connection;
 };
