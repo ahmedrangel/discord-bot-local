@@ -42,12 +42,12 @@ export const gPlay = async (message, text) => {
   const username = message.author.globalName;
   const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.channelId}`));
   const isPlaying = await keyv.get(`player-${message.channelId}`);
+  const joinVoice = joinVoiceChannel({
+    channelId: voiceChannel?.id,
+    guildId: voiceChannel?.guild?.id,
+    adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
+  });
   if (voiceChannel && text) {
-    const joinVoice = joinVoiceChannel({
-      channelId: voiceChannel?.id,
-      guildId: voiceChannel?.guild?.id,
-      adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
-    });
     connection[message.channelId] = joinVoice;
     const simbolos = "<,>,\`";
     const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
@@ -89,6 +89,7 @@ export const gPlay = async (message, text) => {
     });
     await playSongs(player[message.channelId], message, connection[message.channelId]);
   } else if (voiceChannel && !text && musicQueue[0] && !isPlaying) {
+    connection[message.channelId] = joinVoice;
     await playSongs(player[message.channelId], message, connection[message.channelId]);
   } else if (!musicQueue[0] && !isPlaying) {
     message.reply("No hay canciones en cola, para agregar una utiliza **`!gplay <cancion>`**");
