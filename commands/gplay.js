@@ -1,4 +1,4 @@
-import { joinVoiceChannel } from "@discordjs/voice";
+import { joinVoiceChannel, AudioPlayerStatus, createAudioPlayer } from "@discordjs/voice";
 import ytdl from "ytdl-core";
 import * as yt from "youtube-search-without-api-key";
 import { formatDuration } from "../utils/functions.js";
@@ -6,8 +6,6 @@ import { playSongs } from "../utils/audioPlayer/playSongs.js";
 import CONSTANTS from "../constants.js";
 import _dirname from "../projectPath.js";
 import Keyv from "keyv";
-import { AudioPlayerStatus } from "@discordjs/voice";
-import { createAudioPlayer } from "@discordjs/voice";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -52,7 +50,8 @@ export const gPlay = async (message, text) => {
     const simbolos = "<,>,\`";
     const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
     const isUrl = ytdl.validateURL(formatText);
-    const results = (await yt.search(formatText))[0];
+    const results = !isUrl ? (await yt.search(formatText))[0] : null;
+    console.log(results);
     const info = await ytdl.getBasicInfo(isUrl ? formatText : results?.url);
     const duration = formatDuration(info?.videoDetails?.lengthSeconds);
     const title = info?.videoDetails?.title;
