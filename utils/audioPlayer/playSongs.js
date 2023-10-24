@@ -140,7 +140,6 @@ export const playSongs = async (player, message, connection, isIdle) => {
         const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
         const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
         const duration = [];
-        console.log(queue[0]);
         if (queue[0]) {
           queue.forEach((s, i) => {
             i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);
