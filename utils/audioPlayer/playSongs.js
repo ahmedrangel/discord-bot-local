@@ -7,6 +7,7 @@ import CONSTANTS from "../../constants.js";
 import _dirname from "../../projectPath.js";
 import Keyv from "keyv";
 import { totalDuration } from "../functions.js";
+import ytdlReqConfig from "./ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -35,7 +36,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
     playerButtons.forEach ((b) => { b.disabled = false; }); // enable all buttons
     musicQueue.shift();
     await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify(musicQueue));
-    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25 });
+    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: ytdlReqConfig });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);

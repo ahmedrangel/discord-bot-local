@@ -6,6 +6,7 @@ import { playSongs } from "../utils/audioPlayer/playSongs.js";
 import CONSTANTS from "../constants.js";
 import _dirname from "../projectPath.js";
 import Keyv from "keyv";
+import ytdlReqConfig from "../utils/audioPlayer/ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -40,7 +41,7 @@ export const gPlay = async (message, text) => {
   const username = message.author.globalName;
   const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
   const isPlaying = await keyv.get(`player-${message.guildId}`);
-  const joinVoice = voiceChannel ? joinVoiceChannel({
+  const joinVoice = voiceChannel && text ? joinVoiceChannel({
     channelId: voiceChannel?.id,
     guildId: voiceChannel?.guild?.id,
     adapterCreator: voiceChannel?.guild?.voiceAdapterCreator,
@@ -52,7 +53,9 @@ export const gPlay = async (message, text) => {
       const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
       const isUrl = ytdl.validateURL(formatText);
       const results = !isUrl ? (await yt.search(formatText))[0] : null;
-      const info = await ytdl.getBasicInfo(isUrl ? formatText : results?.url);
+      const info = await ytdl.getBasicInfo(isUrl ? formatText : results?.url, {
+        requestOptions: ytdlReqConfig
+      });
       const duration = formatDuration(info?.videoDetails?.lengthSeconds);
       const title = info?.videoDetails?.title;
       const url = info?.videoDetails?.video_url;
@@ -96,10 +99,11 @@ export const gPlay = async (message, text) => {
       message.reply("¡Debes estar en un canal de voz para pedir una canción!");
     }
   } catch (error) {
+    console.log(error);
     if (!isPlaying) {
       connection[message.guildId].destroy();
       connection[message.guildId] = null;
     }
-    message.reply("No se ha podido añadir esta canción debido a que el video tiene restricción o es privado");
+    message.reply("Ha ocurrido un error obteniendo el video.");
   }
 };
