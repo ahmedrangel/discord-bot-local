@@ -19,7 +19,7 @@ export const gPlay = async (message, text) => {
   const queueInDB = await keyv.get(`musicQueue-${message.channelId}`);
   queueInDB ? null : await keyv.set(`musicQueue-${message.channelId}`, "[]");
   if (!playerCreated) {
-
+    idle[message.channelId] = true;
     player[message.channelId] = createAudioPlayer();
     player[message.channelId].on(AudioPlayerStatus.Idle, async () => {
       console.log("audio player idle");
