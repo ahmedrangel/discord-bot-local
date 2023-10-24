@@ -96,7 +96,6 @@ export const gPlay = async (message, text) => {
       message.reply("¡Debes estar en un canal de voz para pedir una canción!");
     }
   } catch (error) {
-    console.log(isPlaying);
     if (!isPlaying) {
       connection[message.guildId].destroy();
       connection[message.guildId] = null;
