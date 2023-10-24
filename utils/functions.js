@@ -7,7 +7,6 @@ export const formatDuration = (durationSeconds) => {
 
 export const totalDuration = (array) => {
   let tiempoTotal = 0;
-  console.log(array);
   for (const item of array) {
     if (item) {
       const tiempoParts = item.split(":");
