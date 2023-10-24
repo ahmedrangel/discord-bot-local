@@ -1,5 +1,5 @@
-import { createAudioResource, VoiceConnectionStatus } from "@discordjs/voice";
-import { ComponentType } from "discord.js";
+import { createAudioResource } from "@discordjs/voice";
+import { ComponentType, ButtonStyle } from "discord.js";
 import ytdl from "ytdl-core";
 import emojis from "../../emojis.js";
 import playerButtons from "./playerButtons.js";
@@ -13,6 +13,7 @@ const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
 let response = {}, connected = {};
 let globalEmbeds = {}, globalComponents = {};
+let previousSong;
 
 export const playSongs = async (player, message, connection, isIdle) => {
   const embeds = [], fields = [], components = [];
@@ -35,6 +36,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
   if (!isPlaying && connected[message.guildId]) {
     playerButtons.forEach ((b) => { b.disabled = false; }); // enable all buttons
     musicQueue.shift();
+    previousSong = nextSong;
     await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: ytdlReqConfig });
     const resource = createAudioResource(stream, { inlineVolume: true });
@@ -108,6 +110,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
               name: isPaused ? emojis.play.name : emojis.pause.name,
               id: isPaused ? emojis.play.id : emojis.pause.id,
             };
+            b.style = isPaused ? ButtonStyle.Success : ButtonStyle.Primary;
           }
         });
         embeds[0].title = isPaused ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
@@ -206,7 +209,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
     const updatedQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
     globalEmbeds[message.guildId][0].fields = [
       { name: "Duración",
-        value: `\`${nextSong.duration}\``,
+        value: `\`${previousSong.duration}\``,
         inline: true
       },
       { name: "En cola:",
