@@ -1,9 +1,8 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Events } from "discord.js";
 import * as dotenv from "dotenv";
 import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
 import Keyv from "keyv";
-import { Events } from "discord.js";
 import CharacterAI from "node_characterai";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
