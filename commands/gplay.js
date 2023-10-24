@@ -14,7 +14,6 @@ let player = {};
 let idle = {};
 
 export const gPlay = async (message, text) => {
-  console.log(message);
   // await keyv.delete(`musicQueue-${message.guildId}`);
   const playerCreated = await keyv.get(`player-${message.guildId}`);
   const queueInDB = await keyv.get(`musicQueue-${message.guildId}`);
