@@ -1,3 +1,6 @@
+# Discord YouTube Player
+Bot de música para Discord capaz de reproducir contenido de YouTube y operar en múltiples servidores simultáneamente. (discord.js v14)
+
 # Instalar
 ```sh
 # install dependencies
