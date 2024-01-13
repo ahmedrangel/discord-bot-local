@@ -15,35 +15,35 @@ let response = {}, connected = {};
 let globalEmbeds = {}, globalComponents = {};
 let previousSong;
 
-export const playSongs = async (player, message, connection, isIdle) => {
+export const playSongs = async (player, event, connection, isIdle) => {
   const embeds = [], fields = [], components = [];
-  const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`)); // get Queue
+  const musicQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`)); // get Queue
   const nextSong = musicQueue[0]; // get Current Song
-  const isPlaying = await keyv.get(`player-${message.guildId}`);
-  connected[message.guildId] = !connection ? false : true;
+  const isPlaying = await keyv.get(`player-${event.guildId}`);
+  connected[event.guildId] = !connection ? false : true;
   // if idle disable all buttons
   if (isIdle) {
-    await keyv.set(`player-${message.guildId}`, false);
+    await keyv.set(`player-${event.guildId}`, false);
     playerButtons.forEach ((b) => {
       b.disabled = true;
     });
-    globalComponents[message.guildId][0].components = playerButtons;
-    response[message.guildId].edit({
-      components: globalComponents[message.guildId],
+    globalComponents[event.guildId][0].components = playerButtons;
+    response[event.guildId].edit({
+      components: globalComponents[event.guildId],
     });
   };
-  // if not playing and connected[message.guildId] enable buttons and start music
-  if (!isPlaying && connected[message.guildId]) {
+  // if not playing and connected[event.guildId] enable buttons and start music
+  if (!isPlaying && connected[event.guildId]) {
     playerButtons.forEach ((b) => { b.disabled = false; }); // enable all buttons
     musicQueue.shift();
     previousSong = nextSong;
-    await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify(musicQueue));
+    await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: reqConfig });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);
     connection.subscribe(player);
-    await keyv.set(`player-${message.guildId}`, true);
+    await keyv.set(`player-${event.guildId}`, true);
     fields.push(
       { name: "Duración",
         value: `\`${nextSong.duration}\``,
@@ -75,14 +75,14 @@ export const playSongs = async (player, message, connection, isIdle) => {
       },
       fields: fields
     });
-    response[message.guildId] = await message.channel.send({
+    response[event.guildId] = await event.channel.send({
       content: "",
       embeds: embeds,
       components: components,
     });
 
     // create collector
-    const collector = response[message.guildId].createMessageComponentCollector();
+    const collector = response[event.guildId].createMessageComponentCollector();
     // collector events
     collector.on("collect", async (i) => {
       console.log(i.customId);
@@ -94,10 +94,10 @@ export const playSongs = async (player, message, connection, isIdle) => {
         playerButtons.forEach ((b) => {
           b.disabled = true;
         });
-        response[message.guildId].edit({
+        response[event.guildId].edit({
           components: components,
         });
-        await keyv.set(`player-${message.guildId}`, false);
+        await keyv.set(`player-${event.guildId}`, false);
         break;
       // if pause/unpause button is pressed
       case "btn_togglePause":
@@ -114,7 +114,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
           }
         });
         embeds[0].title = isPaused ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
-        response[message.guildId].edit({
+        response[event.guildId].edit({
           embeds: embeds,
           components: components,
         });
@@ -126,11 +126,11 @@ export const playSongs = async (player, message, connection, isIdle) => {
         playerButtons.forEach ((b) => {
           b.disabled = true;
         });
-        response[message.guildId].edit({
+        response[event.guildId].edit({
           embeds: embeds,
           components: components,
         });
-        message.channel.send({
+        event.channel.send({
           content: "",
           embeds: [{
             description: `⏭️ **${i.user.globalName}** ha skipeado \`${nextSong.title}\`.`
@@ -140,7 +140,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
       // if playlist button is pressed
       case "btn_playlist":
         await i.deferUpdate();
-        const queue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
+        const queue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
         const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
         const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
         const duration = [];
@@ -156,7 +156,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
           title: "📄 Lista de reproducción:",
           description: nowPlaying + nextSongs + `**Duración total: \`${totalDuration(duration)}\`**`,
         };
-        message.channel.send({
+        event.channel.send({
           content: "",
           embeds: [playlistEmbed]
         });
@@ -164,8 +164,8 @@ export const playSongs = async (player, message, connection, isIdle) => {
       // if cleanList button is pressed
       case "btn_cleanList":
         await i.deferUpdate();
-        await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify([]));
-        message.channel.send({
+        await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify([]));
+        event.channel.send({
           content: "",
           embeds: [{
             description: `🧹 **${i.user.globalName}** ha limpiado la lista.`
@@ -184,7 +184,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
             inline: true
           }
         ];
-        response[message.guildId].edit({
+        response[event.guildId].edit({
           embeds: embeds,
           components: components,
         });
@@ -198,16 +198,16 @@ export const playSongs = async (player, message, connection, isIdle) => {
       playerButtons.forEach ((b) => {
         b.disabled = true;
       });
-      response[message.guildId].edit({
+      response[event.guildId].edit({
         components: components,
       });
     });
-    globalEmbeds[message.guildId] = embeds;
-    globalComponents[message.guildId] = components;
+    globalEmbeds[event.guildId] = embeds;
+    globalComponents[event.guildId] = components;
   } else if (isPlaying && nextSong) {
     // if playing and there is a next song, enable cleanList button and edit message
-    const updatedQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
-    globalEmbeds[message.guildId][0].fields = [
+    const updatedQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
+    globalEmbeds[event.guildId][0].fields = [
       { name: "Duración",
         value: `\`${previousSong.duration}\``,
         inline: true
@@ -220,12 +220,12 @@ export const playSongs = async (player, message, connection, isIdle) => {
     playerButtons.forEach ((b) => {
       b.custom_id === "btn_cleanList" ? b.disabled = false : null;
     });
-    globalComponents[message.guildId][0].components = playerButtons;
-    response[message.guildId].edit({
-      embeds: globalEmbeds[message.guildId],
-      components: globalComponents[message.guildId],
+    globalComponents[event.guildId][0].components = playerButtons;
+    response[event.guildId].edit({
+      embeds: globalEmbeds[event.guildId],
+      components: globalComponents[event.guildId],
     });
   } else {
-    await keyv.set(`player-${message.guildId}`, false);
+    await keyv.set(`player-${event.guildId}`, false);
   }
 };

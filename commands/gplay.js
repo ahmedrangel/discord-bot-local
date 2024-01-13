@@ -14,33 +14,33 @@ let connection = {};
 let player = {};
 let idle = {};
 
-export const gPlay = async (message, text) => {
-  // await keyv.delete(`musicQueue-${message.guildId}`);
-  const playerCreated = await keyv.get(`player-${message.guildId}`);
-  const queueInDB = await keyv.get(`musicQueue-${message.guildId}`);
-  queueInDB ? null : await keyv.set(`musicQueue-${message.guildId}`, "[]");
+export const gPlay = async (event, text) => {
+  // await keyv.delete(`musicQueue-${event.guildId}`);
+  const playerCreated = await keyv.get(`player-${event.guildId}`);
+  const queueInDB = await keyv.get(`musicQueue-${event.guildId}`);
+  queueInDB ? null : await keyv.set(`musicQueue-${event.guildId}`, "[]");
   if (!playerCreated) {
-    idle[message.guildId] = true;
-    player[message.guildId] = createAudioPlayer();
-    player[message.guildId].on(AudioPlayerStatus.Idle, async () => {
+    idle[event.guildId] = true;
+    player[event.guildId] = createAudioPlayer();
+    player[event.guildId].on(AudioPlayerStatus.Idle, async () => {
       console.log("audio player idle");
-      await keyv.set(`player-${message.guildId}`, false);
-      const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
+      await keyv.set(`player-${event.guildId}`, false);
+      const musicQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
       if (musicQueue.length) {
-        await playSongs(player[message.guildId], message, connection[message.guildId], idle[message.guildId]);
+        await playSongs(player[event.guildId], event, connection[event.guildId], idle[event.guildId]);
       } else {
-        connection[message.guildId].disconnect();
-        await playSongs(player[message.guildId], message, null, idle[message.guildId]);
-        connection[message.guildId].destroy();
-        connection[message.guildId] = null;
+        connection[event.guildId].disconnect();
+        await playSongs(player[event.guildId], event, null, idle[event.guildId]);
+        connection[event.guildId].destroy();
+        connection[event.guildId] = null;
       }
     });
   }
-  const voiceChannel = message.member.voice.channel;
-  const profileImage = message.author.displayAvatarURL();
-  const username = message.author.globalName;
-  const musicQueue = JSON.parse(await keyv.get(`musicQueue-${message.guildId}`));
-  const isPlaying = await keyv.get(`player-${message.guildId}`);
+  const voiceChannel = event.member.voice.channel;
+  const profileImage = event.author.displayAvatarURL();
+  const username = event.author.globalName;
+  const musicQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
+  const isPlaying = await keyv.get(`player-${event.guildId}`);
   const joinVoice = voiceChannel && text ? joinVoiceChannel({
     channelId: voiceChannel?.id,
     guildId: voiceChannel?.guild?.id,
@@ -48,7 +48,7 @@ export const gPlay = async (message, text) => {
   }) : null;
   try {
     if (voiceChannel && text) {
-      connection[message.guildId] = joinVoice;
+      connection[event.guildId] = joinVoice;
       const simbolos = "<,>,\`";
       const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
       const isUrl = ytdl.validateURL(formatText);
@@ -71,7 +71,7 @@ export const gPlay = async (message, text) => {
         thumbnail: thumbnail,
         author: author,
       });
-      await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify(musicQueue));
+      await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify(musicQueue));
       const embeds = [];
       embeds.push({
         color: color,
@@ -85,25 +85,25 @@ export const gPlay = async (message, text) => {
           url: thumbnail,
         }
       });
-      message.channel.send({
+      event.channel.send({
         content: "",
         embeds: embeds,
       });
-      await playSongs(player[message.guildId], message, connection[message.guildId]);
+      await playSongs(player[event.guildId], event, connection[event.guildId]);
     } else if (voiceChannel && !text && musicQueue[0] && !isPlaying) {
-      connection[message.guildId] = joinVoice;
-      await playSongs(player[message.guildId], message, connection[message.guildId]);
+      connection[event.guildId] = joinVoice;
+      await playSongs(player[event.guildId], event, connection[event.guildId]);
     } else if (!musicQueue[0] && !isPlaying) {
-      message.reply("No hay canciones en cola, para agregar una utiliza **`!gplay <cancion>`**");
+      event.reply("No hay canciones en cola, para agregar una utiliza **`!gplay <cancion>`**");
     } else if (!voiceChannel) {
-      message.reply("¡Debes estar en un canal de voz para pedir una canción!");
+      event.reply("¡Debes estar en un canal de voz para pedir una canción!");
     }
   } catch (error) {
     console.log(error);
     if (!isPlaying) {
-      connection[message.guildId].destroy();
-      connection[message.guildId] = null;
+      connection[event.guildId].destroy();
+      connection[event.guildId] = null;
     }
-    message.reply("Ha ocurrido un error obteniendo el video.");
+    event.reply("Ha ocurrido un error obteniendo el video.");
   }
 };
