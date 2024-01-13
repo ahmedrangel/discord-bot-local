@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Events } from "discord.js";
 import * as dotenv from "dotenv";
 import * as C from "./commands/index.js";
-import _dirname from "./projectPath.js";
+import { _dirname } from "./projectPath.js";
 import Keyv from "keyv";
 import CharacterAI from "node_characterai";
 import express from "express";

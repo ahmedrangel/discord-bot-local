@@ -1,13 +1,13 @@
 import { createAudioResource } from "@discordjs/voice";
 import { ComponentType, ButtonStyle } from "discord.js";
 import ytdl from "ytdl-core";
-import emojis from "../../emojis.js";
-import playerButtons from "./playerButtons.js";
-import CONSTANTS from "../../constants.js";
-import _dirname from "../../projectPath.js";
+import { playerEmojis } from "../utils/emojis.js";
+import { playerButtons } from "../utils/playerButtons.js";
+import { CONSTANTS } from "../utils/constants.js";
+import { _dirname } from "../projectPath.js";
 import Keyv from "keyv";
-import { totalDuration } from "../functions.js";
-import ytdlReqConfig from "./ytdlReqConfig.js";
+import { totalDuration } from "../utils/helpers.js";
+import { reqConfig } from "../utils/ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -38,7 +38,7 @@ export const playSongs = async (player, message, connection, isIdle) => {
     musicQueue.shift();
     previousSong = nextSong;
     await keyv.set(`musicQueue-${message.guildId}`, JSON.stringify(musicQueue));
-    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: ytdlReqConfig });
+    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: reqConfig });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);
@@ -107,8 +107,8 @@ export const playSongs = async (player, message, connection, isIdle) => {
         playerButtons.forEach ((b) => {
           if (b.custom_id === "btn_togglePause") {
             b.emoji = {
-              name: isPaused ? emojis.play.name : emojis.pause.name,
-              id: isPaused ? emojis.play.id : emojis.pause.id,
+              name: isPaused ? playerEmojis.play.name : playerEmojis.pause.name,
+              id: isPaused ? playerEmojis.play.id : playerEmojis.pause.id,
             };
             b.style = isPaused ? ButtonStyle.Success : ButtonStyle.Primary;
           }
