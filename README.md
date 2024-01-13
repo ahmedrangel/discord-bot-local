@@ -23,7 +23,7 @@ pnpm start
 - Deshabilitación de botones cuando ya no son necesarios
 - Se desconecta cuando finaliza la última canción
 
-# Características de servidor
+# Características de aplicación
 - Los reproductores y las colas de canciones de cada servidor se guardan como datos KV (key/value) en un archivo `db.sqlite` con el ID del servidor de discord que pertenece cada uno
 - Los reproductores se eliminan al reiniciar la aplicación para evitar errores, pero la cola de canciones se mantiene guardada
 
