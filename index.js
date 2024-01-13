@@ -4,9 +4,18 @@ import * as C from "./commands/index.js";
 import _dirname from "./projectPath.js";
 import Keyv from "keyv";
 import CharacterAI from "node_characterai";
+import express from "express";
+
+const server = express();
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 let chat = null;
+
+server.all("/", (req, res) => {
+  res.setHeader("Content-Type", "text/html");
+  res.write("<p>Hosting Active</p>");
+  res.end();
+});
 
 dotenv.config();
 
@@ -57,4 +66,6 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env["DISCORD_TOKEN"]);
+
+server.listen(3000, () => { console.log("Server is online!"); });

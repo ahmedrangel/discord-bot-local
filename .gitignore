@@ -128,3 +128,6 @@ dist
 
 # Databases
 *.sqlite
+
+.replit
+replit.nix
