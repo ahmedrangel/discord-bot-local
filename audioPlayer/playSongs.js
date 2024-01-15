@@ -11,18 +11,16 @@ import { reqConfig } from "../utils/ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
-let response = {}, connected = {};
-let globalEmbeds = {}, globalComponents = {};
-let previousSong;
+let response = {}, connected = {}, globalEmbeds = {}, globalComponents = {}, paused = {}, previousSong = {};
 
-export const playSongs = async (player, event, connection, isIdle) => {
+export const playSongs = async (player, event, connection, idle) => {
   const embeds = [], fields = [], components = [];
   const musicQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`)); // get Queue
   const nextSong = musicQueue[0]; // get Current Song
   const isPlaying = await keyv.get(`player-${event.guildId}`);
   connected[event.guildId] = !connection ? false : true;
   // if idle disable all buttons
-  if (isIdle) {
+  if (idle) {
     await keyv.set(`player-${event.guildId}`, false);
     playerButtons.forEach ((b) => {
       b.disabled = true;
@@ -36,7 +34,7 @@ export const playSongs = async (player, event, connection, isIdle) => {
   if (!isPlaying && connected[event.guildId]) {
     playerButtons.forEach ((b) => { b.disabled = false; }); // enable all buttons
     musicQueue.shift();
-    previousSong = nextSong;
+    previousSong[event.guildId] = nextSong;
     await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify(musicQueue));
     const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: reqConfig });
     const resource = createAudioResource(stream, { inlineVolume: true });
@@ -54,9 +52,17 @@ export const playSongs = async (player, event, connection, isIdle) => {
         inline: true
       }
     );
-    // if musicQueue is empty disable cleanList button
     playerButtons.forEach ((b) => {
+      // if musicQueue is empty disable cleanList button
       !musicQueue.length && b.custom_id === "btn_cleanList" ? b.disabled = true : null;
+      // if not paused and music started, enable pause button
+      if (b.custom_id === "btn_togglePause" && !paused[event.guildId]) {
+        b.emoji = {
+          name: playerEmojis.pause.name,
+          id: playerEmojis.pause.id,
+        };
+        b.style = ButtonStyle.Primary;
+      }
     });
     components.push({
       type: ComponentType.ActionRow,
@@ -102,18 +108,18 @@ export const playSongs = async (player, event, connection, isIdle) => {
       // if pause/unpause button is pressed
       case "btn_togglePause":
         await i.deferUpdate();
-        const isPaused = player.pause();
-        isPaused ? null : player.unpause();
+        paused[event.guildId] = player.pause();
+        paused[event.guildId] ? null : player.unpause();
         playerButtons.forEach ((b) => {
           if (b.custom_id === "btn_togglePause") {
             b.emoji = {
-              name: isPaused ? playerEmojis.play.name : playerEmojis.pause.name,
-              id: isPaused ? playerEmojis.play.id : playerEmojis.pause.id,
+              name: paused[event.guildId] ? playerEmojis.play.name : playerEmojis.pause.name,
+              id: paused[event.guildId] ? playerEmojis.play.id : playerEmojis.pause.id,
             };
-            b.style = isPaused ? ButtonStyle.Success : ButtonStyle.Primary;
+            b.style = paused[event.guildId] ? ButtonStyle.Success : ButtonStyle.Primary;
           }
         });
-        embeds[0].title = isPaused ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
+        embeds[0].title = paused[event.guildId] ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
         response[event.guildId].edit({
           embeds: embeds,
           components: components,
@@ -136,6 +142,8 @@ export const playSongs = async (player, event, connection, isIdle) => {
             description: `⏭️ **${i.user.globalName}** ha skipeado \`${nextSong.title}\`.`
           }],
         });
+        if (paused[event.guildId]) player.unpause();
+        paused[event.guildId] = false;
         break;
       // if playlist button is pressed
       case "btn_playlist":
@@ -195,12 +203,14 @@ export const playSongs = async (player, event, connection, isIdle) => {
     });
     // collector end
     collector.on("end", () => {
-      playerButtons.forEach ((b) => {
-        b.disabled = true;
-      });
-      response[event.guildId].edit({
-        components: components,
-      });
+      if (!connected[event.guildId]) {
+        playerButtons.forEach ((b) => {
+          b.disabled = true;
+        });
+        response[event.guildId].edit({
+          components: components,
+        });
+      }
     });
     globalEmbeds[event.guildId] = embeds;
     globalComponents[event.guildId] = components;
@@ -209,7 +219,7 @@ export const playSongs = async (player, event, connection, isIdle) => {
     const updatedQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
     globalEmbeds[event.guildId][0].fields = [
       { name: "Duración",
-        value: `\`${previousSong.duration}\``,
+        value: `\`${previousSong[event.guildId].duration}\``,
         inline: true
       },
       { name: "En cola:",

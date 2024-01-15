@@ -20,19 +20,21 @@ export const gPlay = async (event, text) => {
   const queueInDB = await keyv.get(`musicQueue-${event.guildId}`);
   queueInDB ? null : await keyv.set(`musicQueue-${event.guildId}`, "[]");
   if (!playerCreated) {
-    idle[event.guildId] = true;
     player[event.guildId] = createAudioPlayer();
     player[event.guildId].on(AudioPlayerStatus.Idle, async () => {
       console.log("audio player idle");
+      idle[event.guildId] = true;
       await keyv.set(`player-${event.guildId}`, false);
       const musicQueue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
       if (musicQueue.length) {
         await playSongs(player[event.guildId], event, connection[event.guildId], idle[event.guildId]);
+        idle[event.guildId] = false;
       } else {
         connection[event.guildId].disconnect();
         await playSongs(player[event.guildId], event, null, idle[event.guildId]);
         connection[event.guildId].destroy();
         connection[event.guildId] = null;
+        idle[event.guildId] = false;
       }
     });
   }
