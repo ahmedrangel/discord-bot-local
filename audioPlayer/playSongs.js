@@ -94,111 +94,111 @@ export const playSongs = async (player, event, connection, idle) => {
       console.log(i.customId);
       switch (i.customId) {
       // if disconnect button is pressed
-      case "btn_dc":
-        await i.deferUpdate();
-        connection.disconnect();
-        playerButtons.forEach ((b) => {
-          b.disabled = true;
-        });
-        response[event.guildId].edit({
-          components: components,
-        });
-        await keyv.set(`player-${event.guildId}`, false);
-        break;
-      // if pause/unpause button is pressed
-      case "btn_togglePause":
-        await i.deferUpdate();
-        paused[event.guildId] = player.pause();
-        paused[event.guildId] ? null : player.unpause();
-        playerButtons.forEach ((b) => {
-          if (b.custom_id === "btn_togglePause") {
-            b.emoji = {
-              name: paused[event.guildId] ? playerEmojis.play.name : playerEmojis.pause.name,
-              id: paused[event.guildId] ? playerEmojis.play.id : playerEmojis.pause.id,
-            };
-            b.style = paused[event.guildId] ? ButtonStyle.Success : ButtonStyle.Primary;
-          }
-        });
-        embeds[0].title = paused[event.guildId] ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
-        response[event.guildId].edit({
-          embeds: embeds,
-          components: components,
-        });
-        break;
-      // if skip button is pressed
-      case "btn_skip":
-        await i.deferUpdate();
-        player.stop();
-        playerButtons.forEach ((b) => {
-          b.disabled = true;
-        });
-        response[event.guildId].edit({
-          embeds: embeds,
-          components: components,
-        });
-        event.channel.send({
-          content: "",
-          embeds: [{
-            description: `⏭️ **${i.user.globalName}** ha skipeado \`${nextSong.title}\`.`
-          }],
-        });
-        if (paused[event.guildId]) player.unpause();
-        paused[event.guildId] = false;
-        break;
-      // if playlist button is pressed
-      case "btn_playlist":
-        await i.deferUpdate();
-        const queue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
-        const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
-        const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
-        const duration = [];
-        if (queue[0]) {
-          queue.forEach((s, i) => {
-            i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);
+        case "btn_dc":
+          await i.deferUpdate();
+          connection.disconnect();
+          playerButtons.forEach ((b) => {
+            b.disabled = true;
           });
-        } else {
-          duration.push(nextSong?.duration);
-        }
-        const playlistEmbed = {
-          color: color,
-          title: "📄 Lista de reproducción:",
-          description: nowPlaying + nextSongs + `**Duración total: \`${totalDuration(duration)}\`**`,
-        };
-        event.channel.send({
-          content: "",
-          embeds: [playlistEmbed]
-        });
-        break;
-      // if cleanList button is pressed
-      case "btn_cleanList":
-        await i.deferUpdate();
-        await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify([]));
-        event.channel.send({
-          content: "",
-          embeds: [{
-            description: `🧹 **${i.user.globalName}** ha limpiado la lista.`
-          }],
-        });
-        playerButtons.forEach ((b) => {
-          b.custom_id === "btn_cleanList" ? b.disabled = true : null;
-        });
-        embeds[0].fields = [
-          { name: "Duración",
-            value: `\`${nextSong.duration}\``,
-            inline: true
-          },
-          { name: "En cola:",
-            value: "`0 canciones`",
-            inline: true
+          response[event.guildId].edit({
+            components: components,
+          });
+          await keyv.set(`player-${event.guildId}`, false);
+          break;
+          // if pause/unpause button is pressed
+        case "btn_togglePause":
+          await i.deferUpdate();
+          paused[event.guildId] = player.pause();
+          paused[event.guildId] ? null : player.unpause();
+          playerButtons.forEach ((b) => {
+            if (b.custom_id === "btn_togglePause") {
+              b.emoji = {
+                name: paused[event.guildId] ? playerEmojis.play.name : playerEmojis.pause.name,
+                id: paused[event.guildId] ? playerEmojis.play.id : playerEmojis.pause.id,
+              };
+              b.style = paused[event.guildId] ? ButtonStyle.Success : ButtonStyle.Primary;
+            }
+          });
+          embeds[0].title = paused[event.guildId] ? `🛑 El reproductor ha sido pausado por: ${i.user.globalName}` : "♪ Ahora estás escuchando:",
+          response[event.guildId].edit({
+            embeds: embeds,
+            components: components,
+          });
+          break;
+          // if skip button is pressed
+        case "btn_skip":
+          await i.deferUpdate();
+          player.stop();
+          playerButtons.forEach ((b) => {
+            b.disabled = true;
+          });
+          response[event.guildId].edit({
+            embeds: embeds,
+            components: components,
+          });
+          event.channel.send({
+            content: "",
+            embeds: [{
+              description: `⏭️ **${i.user.globalName}** ha skipeado \`${nextSong.title}\`.`
+            }],
+          });
+          if (paused[event.guildId]) player.unpause();
+          paused[event.guildId] = false;
+          break;
+          // if playlist button is pressed
+        case "btn_playlist":
+          await i.deferUpdate();
+          const queue = JSON.parse(await keyv.get(`musicQueue-${event.guildId}`));
+          const nowPlaying = `♪. **\`${nextSong.author}\` | [${nextSong.title}](${nextSong.url})** \`${nextSong.duration}\`\n`;
+          const nextSongs = queue.map((song, index) => `${index + 1}. **\`${song.author}\` | [${song.title}](${song.url})** \`${song.duration}\``).join("\n") + "\n";
+          const duration = [];
+          if (queue[0]) {
+            queue.forEach((s, i) => {
+              i === 0 ? duration.push(nextSong?.duration, s?.duration) : duration.push(s?.duration);
+            });
+          } else {
+            duration.push(nextSong?.duration);
           }
-        ];
-        response[event.guildId].edit({
-          embeds: embeds,
-          components: components,
-        });
-        break;
-      default:
-        null;
+          const playlistEmbed = {
+            color: color,
+            title: "📄 Lista de reproducción:",
+            description: nowPlaying + nextSongs + `**Duración total: \`${totalDuration(duration)}\`**`,
+          };
+          event.channel.send({
+            content: "",
+            embeds: [playlistEmbed]
+          });
+          break;
+          // if cleanList button is pressed
+        case "btn_cleanList":
+          await i.deferUpdate();
+          await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify([]));
+          event.channel.send({
+            content: "",
+            embeds: [{
+              description: `🧹 **${i.user.globalName}** ha limpiado la lista.`
+            }],
+          });
+          playerButtons.forEach ((b) => {
+            b.custom_id === "btn_cleanList" ? b.disabled = true : null;
+          });
+          embeds[0].fields = [
+            { name: "Duración",
+              value: `\`${nextSong.duration}\``,
+              inline: true
+            },
+            { name: "En cola:",
+              value: "`0 canciones`",
+              inline: true
+            }
+          ];
+          response[event.guildId].edit({
+            embeds: embeds,
+            components: components,
+          });
+          break;
+        default:
+          null;
       }
     });
     // collector end
