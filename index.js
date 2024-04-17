@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Events } from "discord.js";
-import * as dotenv from "dotenv";
+import "dotenv/config";
 import * as C from "./commands/index.js";
 import { _dirname } from "./projectPath.js";
 import Keyv from "keyv";
@@ -14,8 +14,6 @@ server.all("/", (req, res) => {
   res.write("<p>Hosting Active</p>");
   res.end();
 });
-
-dotenv.config();
 
 // Clear audio players if the application restarts due to an error or forced termination.
 for await (const [key, value] of keyv.iterator()) {
