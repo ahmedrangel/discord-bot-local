@@ -1,12 +1,12 @@
 import { joinVoiceChannel, AudioPlayerStatus, createAudioPlayer } from "@discordjs/voice";
-import ytdl from "ytdl-core";
+import { yt_validate, video_basic_info } from "play-dl";
 import * as yt from "youtube-search-without-api-key";
 import { formatDuration } from "../utils/helpers.js";
 import { playSongs } from "../audioPlayer/playSongs.js";
 import { CONSTANTS } from "../utils/constants.js";
 import { _dirname } from "../projectPath.js";
 import Keyv from "keyv";
-import { reqConfig } from "../utils/ytdlReqConfig.js";
+// import { reqConfig } from "../utils/ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -53,17 +53,15 @@ export const gPlay = async (event, text) => {
       connection[event.guildId] = joinVoice;
       const simbolos = "<,>,\`";
       const formatText = text.replace(new RegExp(`^[${simbolos}]+|[${simbolos}]+$`, "g"), " ");
-      const isUrl = ytdl.validateURL(formatText);
+      const isUrl = yt_validate(formatText) === "video" ? true : false;
       const results = !isUrl ? (await yt.search(formatText))[0] : null;
-      const info = await ytdl.getBasicInfo(isUrl ? formatText : results?.url, {
-        requestOptions: reqConfig
-      });
+      const info = await video_basic_info(isUrl ? formatText : results?.url);
       const duration = formatDuration(info?.videoDetails?.lengthSeconds);
-      const title = info?.videoDetails?.title;
-      const url = info?.videoDetails?.video_url;
-      const thumbnailArray = info?.videoDetails?.thumbnails;
+      const title = info?.video_details?.title;
+      const url = info?.video_details?.url;
+      const thumbnailArray = info?.video_details?.thumbnails;
       const thumbnail = (thumbnailArray[thumbnailArray.length - 1].url).replace(/\?.*$/, "");
-      const author = info.videoDetails.author.name;
+      const author = info.video_details.channel.name;
       musicQueue.push({
         username: username,
         profileImage: profileImage,

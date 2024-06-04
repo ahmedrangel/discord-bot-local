@@ -1,13 +1,13 @@
 import { createAudioResource } from "@discordjs/voice";
 import { ComponentType, ButtonStyle } from "discord.js";
-import ytdl from "ytdl-core";
+import { stream } from "play-dl";
 import { playerEmojis } from "../utils/emojis.js";
 import { playerButtons } from "../utils/playerButtons.js";
 import { CONSTANTS } from "../utils/constants.js";
 import { _dirname } from "../projectPath.js";
 import Keyv from "keyv";
 import { totalDuration } from "../utils/helpers.js";
-import { reqConfig } from "../utils/ytdlReqConfig.js";
+// import { reqConfig } from "../utils/ytdlReqConfig.js";
 
 const keyv = new Keyv("sqlite://" + _dirname + "/db.sqlite");
 const { color } = CONSTANTS;
@@ -36,8 +36,11 @@ export const playSongs = async (player, event, connection, idle) => {
     musicQueue.shift();
     previousSong[event.guildId] = nextSong;
     await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify(musicQueue));
-    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, requestOptions: reqConfig });
-    const resource = createAudioResource(stream, { inlineVolume: true });
+    const source = await stream(nextSong.url);
+    const resource = createAudioResource(source.stream, {
+      inlineVolume: true,
+      inputType : source.type
+    });
     resource.volume.setVolume(0.4);
     player.play(resource);
     connection.subscribe(player);

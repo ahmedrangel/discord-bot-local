@@ -56,4 +56,4 @@ client.on(Events.MessageCreate, async (event) => {
 
 client.login(process.env["DISCORD_TOKEN"]);
 
-server.listen(3000, () => { console.log("Server is online!"); });
+server.listen(3002, () => { console.log("Server is online!"); });
