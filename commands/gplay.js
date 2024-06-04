@@ -56,7 +56,7 @@ export const gPlay = async (event, text) => {
       const isUrl = yt_validate(formatText) === "video" ? true : false;
       const results = !isUrl ? (await yt.search(formatText))[0] : null;
       const info = await video_basic_info(isUrl ? formatText : results?.url);
-      const duration = formatDuration(info?.videoDetails?.lengthSeconds);
+      const duration = formatDuration(info?.video_details?.durationInSec);
       const title = info?.video_details?.title;
       const url = info?.video_details?.url;
       const thumbnailArray = info?.video_details?.thumbnails;
