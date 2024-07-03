@@ -427,7 +427,7 @@ export class Timer {
     pause() {
         if (!this.paused && !this.destroyed) {
             this.paused = true;
-            clearTimeout(this.timer);
+            clearTimeout(this.timer as NodeJS.Timeout);
             this.time_left = this.time_left - (process.hrtime()[0] - this.time_start);
             return true;
         } else return false;
@@ -450,7 +450,7 @@ export class Timer {
      */
     reuse() {
         if (!this.destroyed) {
-            clearTimeout(this.timer);
+            clearTimeout(this.timer as NodeJS.Timeout);
             this.time_left = this.time_total;
             this.paused = false;
             this.time_start = process.hrtime()[0];
@@ -464,7 +464,7 @@ export class Timer {
      * It can't be used again.
      */
     destroy() {
-        clearTimeout(this.timer);
+        clearTimeout(this.timer as NodeJS.Timeout);
         this.destroyed = true;
         this.callback = () => {};
         this.time_total = 0;
