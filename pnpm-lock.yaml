@@ -24,8 +24,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       play-dl:
-        specifier: file:play-dl-test
-        version: file:play-dl-test
+        specifier: file:play-dl
+        version: file:play-dl
       youtube-search-without-api-key:
         specifier: ^2.0.1
         version: 2.0.1
@@ -962,8 +962,8 @@ packages:
   play-audio@0.5.2:
     resolution: {integrity: sha512-ZAqHUKkQLix2Iga7pPbsf1LpUoBjcpwU93F1l3qBIfxYddQLhxS6GKmS0d3jV8kSVaUbr6NnOEcEMFvuX93SWQ==}
 
-  play-dl@file:play-dl-test:
-    resolution: {directory: play-dl-test, type: directory}
+  play-dl@file:play-dl:
+    resolution: {directory: play-dl, type: directory}
     engines: {node: '>=16.0.0'}
 
   prebuild-install@7.1.2:
@@ -2335,7 +2335,7 @@ snapshots:
 
   play-audio@0.5.2: {}
 
-  play-dl@file:play-dl-test:
+  play-dl@file:play-dl:
     dependencies:
       play-audio: 0.5.2
 

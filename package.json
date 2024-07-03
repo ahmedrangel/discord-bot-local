@@ -3,7 +3,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "eslint --fix .",
-    "build:play-dl": "cd play-dl && pnpm i && pnpm build"
+    "build:play-dl": "cd play-dl && pnpm i && pnpm build && cd .. && pnpm i"
   },
   "dependencies": {
     "@discordjs/voice": "^0.17.0",
