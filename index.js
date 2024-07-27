@@ -43,7 +43,7 @@ client.on(Events.MessageCreate, async (event) => {
   const command = split[0].toLowerCase(); // Extract command no case sensitive
   const text = split.slice(1).join(" "); // Slice command and rejoin the rest of the array
   switch (command) {
-    case "!fplay":
+    case "!gplay":
       C.gPlay(event, text);
       break;
   }
