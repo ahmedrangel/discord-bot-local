@@ -30,8 +30,6 @@ pnpm start
 
 # Variables de ambiente ENV
 - `DISCORD_TOKEN`: El token del bot
-- `YT_COOKIE` (*opcional*): Cookies de una cuenta de YouTube para la posibilidad de reproducir videos con restricciones (edad, privado, etc.)
-- `YT_ID_TOKEN` (*opcional*): Si usas las cookies de una cuenta, también será necesario su Identity Token. [Aquí](https://github.com/fent/node-ytdl-core/issues/661#issuecomment-654042939) comentan como obtenerlo
 
 # Capturas
 ![image](https://github.com/ahmedrangel/discord-youtube-player/assets/50090595/13cb220d-4f12-40f4-9944-02df44c7a8a6)
