@@ -36,7 +36,7 @@ export const playSongs = async (player, event, connection, idle) => {
     musicQueue.shift();
     previousSong[event.guildId] = nextSong;
     await keyv.set(`musicQueue-${event.guildId}`, JSON.stringify(musicQueue));
-    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 16384, dlChunkSize: 65536, agent });
+    const stream = ytdl(nextSong.url, { filter: "audioonly", quality: "highestaudio", highWaterMark: 1 << 25, agent });
     const resource = createAudioResource(stream, { inlineVolume: true });
     resource.volume.setVolume(0.4);
     player.play(resource);
